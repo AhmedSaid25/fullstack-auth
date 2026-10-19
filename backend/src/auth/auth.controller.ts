@@ -8,6 +8,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import {
+  ApiBadRequestResponse,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiTags,
+  ApiTooManyRequestsResponse,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import type { CookieOptions, Response } from 'express';
 import { AUTH_COOKIE_NAME } from './auth.constants';
@@ -17,6 +27,8 @@ import { SignUpDto } from './dto/sign-up.dto';
 
 // Rate limiting slows down password guessing (brute force) on these routes
 @UseGuards(ThrottlerGuard)
+@ApiTags('auth')
+@ApiTooManyRequestsResponse({ description: 'Rate limit exceeded' })
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -26,6 +38,9 @@ export class AuthController {
 
   // POST /auth/signup -> 201, creates the user and logs them in
   @Post('signup')
+  @ApiCreatedResponse({ description: 'User created, auth cookie set' })
+  @ApiBadRequestResponse({ description: 'Validation failed' })
+  @ApiConflictResponse({ description: 'Email is already registered' })
   async signUp(
     @Body() dto: SignUpDto,
     // passthrough: we only set a cookie, Nest still sends the returned value as JSON
@@ -39,6 +54,8 @@ export class AuthController {
   // POST /auth/signin -> 200 (not 201, nothing is created)
   @Post('signin')
   @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ description: 'Signed in, auth cookie set' })
+  @ApiUnauthorizedResponse({ description: 'Invalid email or password' })
   async signIn(
     @Body() dto: SignInDto,
     @Res({ passthrough: true }) res: Response,
@@ -51,6 +68,7 @@ export class AuthController {
   // POST /auth/signout -> 204, the browser deletes the cookie
   @Post('signout')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiNoContentResponse({ description: 'Signed out, auth cookie cleared' })
   signOut(@Res({ passthrough: true }) res: Response) {
     // Options must match the ones used to set it, or the browser keeps the cookie
     res.clearCookie(AUTH_COOKIE_NAME, this.cookieOptions());
