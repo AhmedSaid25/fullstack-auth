@@ -66,7 +66,9 @@ export class AuthService {
 
   private async buildAuthResult(user: UserDocument): Promise<AuthResult> {
     // "sub" (subject) is the standard JWT claim for "who this token belongs to"
-    const accessToken = await this.jwtService.signAsync({ sub: user.id });
+    const accessToken = await this.jwtService.signAsync({
+      sub: user._id.toString(),
+    });
     return { user: toPublicUser(user), accessToken };
   }
 }

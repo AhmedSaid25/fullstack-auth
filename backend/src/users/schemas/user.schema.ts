@@ -23,7 +23,7 @@ export const UserSchema = SchemaFactory.createForClass(User);
 export type PublicUser = { id: string; email: string; name: string };
 
 export const toPublicUser = (user: UserDocument): PublicUser => ({
-  id: user.id,
+  id: user._id.toString(),
   email: user.email,
   name: user.name,
 });
