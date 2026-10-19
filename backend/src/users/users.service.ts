@@ -12,4 +12,9 @@ export class UsersService {
   create(data: User): Promise<UserDocument> {
     return this.userModel.create(data);
   }
+
+  // '+password' overrides select: false, only sign-in needs the hash
+  findByEmailWithPassword(email: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ email }).select('+password').exec();
+  }
 }
