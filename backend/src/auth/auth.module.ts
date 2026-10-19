@@ -9,6 +9,8 @@ import { AuthService } from './auth.service';
   imports: [
     UsersModule,
     JwtModule.registerAsync({
+      // global: JwtService is injectable in every module (JwtAuthGuard is used outside AuthModule)
+      global: true,
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         secret: config.getOrThrow<string>('JWT_SECRET'),
