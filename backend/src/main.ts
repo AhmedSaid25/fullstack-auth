@@ -1,6 +1,7 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
 import { requestLogger } from './common/request-logger.middleware';
@@ -9,6 +10,15 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.use(requestLogger);
+
+  // Sets secure HTTP headers (X-Content-Type-Options, Strict-Transport-Security, ...)
+  app.use(helmet());
+
+  // Only the frontend may call the API from a browser; credentials: true allows the cookie
+  app.enableCors({
+    origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
+    credentials: true,
+  });
 
   // Parses the Cookie header into req.cookies (used by JwtAuthGuard)
   app.use(cookieParser());
