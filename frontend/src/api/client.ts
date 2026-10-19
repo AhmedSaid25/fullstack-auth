@@ -27,6 +27,11 @@ export async function request<T>(
     throw new ApiError(0, 'Cannot reach the server. Please try again.');
   }
 
+  // The rate limiter's own message ("ThrottlerException: ...") isn't user friendly
+  if (response.status === 429) {
+    throw new ApiError(429, 'Too many attempts. Please wait a minute and try again.');
+  }
+
   if (!response.ok) {
     // Backend errors look like { message: string | string[] }
     const body = (await response.json().catch(() => null)) as {

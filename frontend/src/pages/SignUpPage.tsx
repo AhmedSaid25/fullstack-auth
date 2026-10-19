@@ -7,32 +7,18 @@ import { ApiError } from '../api/client';
 import { useAuth } from '../auth/useAuth';
 import { signUpSchema, type SignUpFormValues } from '../auth/validation';
 import { AuthLayout } from '../components/AuthLayout';
+import { muiField } from '../utils/muiField';
 
 export function SignUpPage() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors, isSubmitting },
-  } = useForm<SignUpFormValues>({
+  const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     mode: 'onTouched', // validate a field after the user leaves it, then on every change
   });
-
-  // MUI's TextField puts `ref` on its wrapper <div>; react-hook-form needs the real <input>
-  const field = (name: keyof SignUpFormValues) => {
-    const { ref, ...rest } = register(name);
-    return {
-      ...rest,
-      inputRef: ref,
-      error: Boolean(errors[name]),
-      helperText: errors[name]?.message,
-    };
-  };
+  const { errors, isSubmitting } = form.formState;
 
   // Only called when the zod schema passes
   const onSubmit = async (values: SignUpFormValues) => {
@@ -43,7 +29,7 @@ export function SignUpPage() {
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
         // Show "email already registered" under the email field itself
-        setError('email', { message: error.message });
+        form.setError('email', { message: error.message });
       } else {
         setServerError(error instanceof ApiError ? error.message : 'Something went wrong');
       }
@@ -53,18 +39,24 @@ export function SignUpPage() {
   return (
     <AuthLayout title="Create an account" subtitle="Sign up to get started">
       {/* noValidate: turn off browser popups, zod handles validation */}
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
         <Stack spacing={2}>
           {serverError && <Alert severity="error">{serverError}</Alert>}
 
-          <TextField label="Email" type="email" autoComplete="email" fullWidth {...field('email')} />
-          <TextField label="Name" autoComplete="name" fullWidth {...field('name')} />
+          <TextField
+            label="Email"
+            type="email"
+            autoComplete="email"
+            fullWidth
+            {...muiField(form, 'email')}
+          />
+          <TextField label="Name" autoComplete="name" fullWidth {...muiField(form, 'name')} />
           <TextField
             label="Password"
             type="password"
             autoComplete="new-password"
             fullWidth
-            {...field('password')}
+            {...muiField(form, 'password')}
             // Show the rules until there is an error to show instead
             helperText={
               errors.password?.message ??

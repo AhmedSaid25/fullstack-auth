@@ -17,3 +17,11 @@ export const signUpSchema = z.object({
 
 // The TypeScript type comes from the schema: one source of truth
 export type SignUpFormValues = z.infer<typeof signUpSchema>;
+
+// No strength rules on sign-in, only "is something there"
+export const signInSchema = z.object({
+  email: z.string().trim().pipe(z.email('Enter a valid email address')),
+  password: z.string().min(1, 'Password is required'),
+});
+
+export type SignInFormValues = z.infer<typeof signInSchema>;
