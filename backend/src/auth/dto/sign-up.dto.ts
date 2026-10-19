@@ -28,6 +28,8 @@ export class SignUpDto {
   @MinLength(8, { message: 'Password must be at least 8 characters' })
   // bcrypt only uses the first 72 bytes, so very long passwords are rejected
   @MaxLength(64)
+  // Separate rules give specific messages. They share the "matches" constraint name,
+  // so if several fail at once only one is reported; the user sees the next after fixing it.
   @Matches(/[A-Za-z]/, { message: 'Password must contain at least one letter' })
   @Matches(/\d/, { message: 'Password must contain at least one number' })
   @Matches(/[^A-Za-z0-9]/, {
